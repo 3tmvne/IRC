@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
-// #include "Client.hpp"
+#include "Client.hpp"
 
 class Channel
 {
@@ -57,7 +57,7 @@ class Channel
 		void	removeInvite(int fd);
 
 		std::string	getModeString() const;
-		// void		broadcast(std::map<int, Client> &clients, const std::string &message, int except) const;
+		void		broadcast(std::map<int, Client> &clients, const std::string &message, int except) const;
 };
 
 #endif
