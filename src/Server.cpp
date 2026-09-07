@@ -170,8 +170,22 @@ void Server::executeCommand(int fd, const Command &cmd)
 	if (name.empty())
 		return ;
 
+	// Only the handshake itself is answered before registration completes.
+	// Anything else would let an unauthenticated peer join channels and read
+	// traffic without ever having presented the server password.
+	if (!_clients[fd].isRegistered() && name != "PASS" && name != "NICK"
+		&& name != "USER" && name != "QUIT" && name != "PING")
+	{
+		sendNumeric(fd, ERR_NOTREGISTERED, ":You have not registered");
+		return ;
+	}
+
 	if (name == "PASS")
 		handlePassCommand(fd, cmd.args);
+	else if (name == "NICK")
+		handleNickCommand(fd, cmd.args);
+	else if (name == "USER")
+		handleUserCommand(fd, cmd.args);
 	else if (name == "PING")
 		handlePingCommand(fd, cmd.args);
 	else if (name == "QUIT")
@@ -186,7 +200,12 @@ void Server::executeCommand(int fd, const Command &cmd)
 		handleTopicCommand(fd, cmd.args);
 	else if (name == "MODE")
 		handleModeCommand(fd, cmd.args);
-	// Phase 2 adds NICK and USER; Phase 3 adds PRIVMSG, NOTICE and PART.
+	else if (name == "PRIVMSG")
+		handlePrivmsgCommand(fd, cmd.args);
+	else if (name == "NOTICE")
+		handleNoticeCommand(fd, cmd.args);
+	else if (name == "PART")
+		handlePartCommand(fd, cmd.args);
 	else
 		sendNumeric(fd, ERR_UNKNOWNCOMMAND, name + " :Unknown command");
 }

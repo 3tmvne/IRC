@@ -1,8 +1,10 @@
 #include "Server.hpp"
+#include <algorithm>
 #include <cstdlib>
 #include <sstream>
 
-static std::vector<std::string> splitList(const std::string &str, char sep)
+// Shared by JOIN/PART/PRIVMSG: "#a,#b" and "key1,key2" are paired by index.
+std::vector<std::string> Server::splitList(const std::string &str, char sep)
 {
 	std::vector<std::string>	result;
 	std::stringstream			ss(str);
@@ -66,6 +68,41 @@ void Server::removeFromChannel(int fd, const std::string &name)
 	it->second.removeMember(fd);
 	if (it->second.isEmpty())
 		_channels.erase(it);
+}
+
+// Writes one line to every client sharing at least one channel with fd.
+// Recipients are collected before anything is sent, so a peer met in several
+// channels is still written to exactly once -- NICK and QUIT are announced
+// per-user, not per-channel, and clients would otherwise show them twice.
+void Server::broadcastToPeers(int fd, const std::string &message, bool includeSelf)
+{
+	std::vector<int>							targets;
+	std::map<std::string, Channel>::iterator	it;
+
+	for (it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		if (!it->second.isMember(fd))
+			continue ;
+
+		const std::vector<int>	&members = it->second.getMembers();
+
+		for (size_t i = 0; i < members.size(); i++)
+		{
+			if (members[i] != fd
+				&& std::find(targets.begin(), targets.end(), members[i]) == targets.end())
+				targets.push_back(members[i]);
+		}
+	}
+	if (includeSelf)
+		targets.push_back(fd);
+
+	for (size_t i = 0; i < targets.size(); i++)
+	{
+		std::map<int, Client>::iterator	client = _clients.find(targets[i]);
+
+		if (client != _clients.end())
+			client->second.appendOut(message + "\r\n");
+	}
 }
 
 void Server::handleJoinCommand(int fd, const std::vector<std::string> &params)

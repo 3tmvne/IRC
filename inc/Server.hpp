@@ -63,20 +63,28 @@ class Server
 		void	executeCommand(int fd, const Command &cmd);
 
 		/* ---- shared helpers (src/commands/ChannelCmds.cpp) ---- */
+		static std::vector<std::string>	splitList(const std::string &str, char sep);
 		std::string	userPrefix(int fd);
 		void		sendNumeric(int fd, const std::string &code, const std::string &args);
 		int			getFdByNick(const std::string &nick);
 		std::string	buildNamesList(Channel &channel);
 		void		removeFromChannel(int fd, const std::string &name);
+		void		broadcastToPeers(int fd, const std::string &message, bool includeSelf);
 
 		/* ---- registration (src/commands/Registration.cpp) ---- */
 		void	handlePassCommand(int fd, const std::vector<std::string> &params);
-		// Phase 2: handleNickCommand, handleUserCommand, completeRegistration
+		void	handleNickCommand(int fd, const std::vector<std::string> &params);
+		void	handleUserCommand(int fd, const std::vector<std::string> &params);
+		void	completeRegistration(int fd);
 
 		/* ---- messaging (src/commands/Messaging.cpp) ---- */
 		void	handlePingCommand(int fd, const std::vector<std::string> &params);
 		void	handleQuitCommand(int fd, const std::vector<std::string> &params);
-		// Phase 3: handlePrivmsgCommand, handleNoticeCommand, handlePartCommand
+		void	handlePrivmsgCommand(int fd, const std::vector<std::string> &params);
+		void	handleNoticeCommand(int fd, const std::vector<std::string> &params);
+		void	handlePartCommand(int fd, const std::vector<std::string> &params);
+		void	deliverMessage(int fd, const std::vector<std::string> &params,
+				const std::string &verb, bool quiet);
 
 		/* ---- channels (src/commands/ChannelCmds.cpp) ---- */
 		void	handleJoinCommand(int fd, const std::vector<std::string> &params);
