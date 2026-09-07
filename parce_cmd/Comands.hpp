@@ -1,41 +1,39 @@
 #ifndef COMANDS_HPP
 #define COMANDS_HPP
 
+#include <string>
+
 #include "Parcer.hpp"
 #include "client.hpp"
 
+class Server;
+
 class CmdHandler
 {
-    private:
-        void    handlePass(Command &cmd, Client &client, Server &server);
-        
-        
-        void    handleNick(Command &cmd, Client &client, Server &server);
-        bool    isValidNick(const std::string &nick);
+private:
+    void    handlePass(Command &cmd, Client &client, Server &server);
 
-        void    handleUser(Command &cmd, Client &client, Server &server);
+    void    handleNick(Command &cmd, Client &client, Server &server);
+    bool    isValidNick(const std::string &nick);
 
+    void    handleUser(Command &cmd, Client &client, Server &server);
 
-        void    checkRegistr(Client &client, Server &server);
-        void    handlePrivmsg();
+    void    handlePing(Command &cmd, Client &client, Server &server);
 
-        void    handlePing(Command &cmd, Client &client, Server &server);
+    void    handlePrivMsg(Command &cmd, Client &client, Server &server);
 
-        void    handlePrivMsg(Command &cmd, Client &client, Server &server);
+    void    checkRegistration(Client &client, Server &server);
 
-        void    sendNumeric(Server &server, Client &client, 
-                                const std::string &code, 
-                                const std::string &message);
+    void    sendNumeric(Server &server,
+                        Client &client,
+                        const std::string &code,
+                        const std::string &message);
 
-    public:
-        CmdHandler();
-        ~CmdHandler();
+public:
+    CmdHandler();
+    ~CmdHandler();
 
-
-
-        void    execute(Command &cmd, Client &client, Server &server);
-
-    
+    void    execute(Command &cmd, Client &client, Server &server);
 };
 
 #endif
