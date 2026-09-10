@@ -3,25 +3,22 @@
 
 #include <string>
 
-// One client connection. Owns its own input/output buffers so that every
-// socket operation in the server stays non-blocking: recv() appends here,
-// send() drains from here, and nothing ever blocks waiting on a peer.
 class Client
 {
 	private:
-		int			_fd;
+		int			fd;
 
-		std::string	_nickname;
-		std::string	_username;
-		std::string	_realname;
-		std::string	_hostname;
+		std::string	nickname;
+		std::string	username;
+		std::string	realname;
+		std::string	hostname;
 
-		std::string	_inBuf;
-		std::string	_outBuf;
+		std::string	inbuf;
+		std::string	outbuf;
 
-		bool		_passOk;
-		bool		_registered;
-		bool		_quitting;
+		bool		passok;
+		bool		registered;
+		bool		quitting;
 
 	public:
 		Client();
@@ -30,36 +27,36 @@ class Client
 		Client &operator=(const Client &other);
 		~Client();
 
-		int					getFd() const;
+		int					getfd() const;
 
-		const std::string	&getNickname() const;
-		void				setNickname(const std::string &nickname);
-		const std::string	&getUsername() const;
-		void				setUsername(const std::string &username);
-		const std::string	&getRealname() const;
-		void				setRealname(const std::string &realname);
-		const std::string	&getHostname() const;
-		void				setHostname(const std::string &hostname);
+		const std::string	&getnickname() const;
+		void				setnickname(const std::string &nickname);
+		const std::string	&getusername() const;
+		void				setusername(const std::string &username);
+		const std::string	&getrealname() const;
+		void				setrealname(const std::string &realname);
+		const std::string	&gethostname() const;
+		void				sethostname(const std::string &hostname);
 
-		// Input side: raw bytes in, complete lines out.
-		void				appendIn(const std::string &data);
-		bool				extractLine(std::string &line);
-		size_t				inSize() const;
+		
+		void				appendin(const std::string &data);
+		bool				extractline(std::string &line);
+		size_t				insize() const;
 
-		// Output side: everything the server wants to say goes through here.
-		void				appendOut(const std::string &data);
-		const std::string	&getOut() const;
-		void				consumeOut(size_t n);
-		bool				hasOut() const;
+		
+		void				appendout(const std::string &data);
+		const std::string	&getout() const;
+		void				consumeout(size_t n);
+		bool				hasout() const;
 
-		bool				hasPass() const;
-		void				setPass(bool value);
-		bool				isRegistered() const;
-		void				setRegistered(bool value);
-		bool				isQuitting() const;
-		void				setQuitting(bool value);
+		bool				haspass() const;
+		void				setpass(bool value);
+		bool				isregistered() const;
+		void				setregistered(bool value);
+		bool				isquitting() const;
+		void				setquitting(bool value);
 
-		// ":nick!user@host" -- the RFC source prefix of every relayed message.
+		
 		std::string			prefix() const;
 };
 

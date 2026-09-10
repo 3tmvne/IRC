@@ -19,7 +19,7 @@ Parser::~Parser()
 {
 }
 
-std::string Parser::toUpper(const std::string &str)
+std::string Parser::toupper(const std::string &str)
 {
 	std::string	result = str;
 
@@ -39,8 +39,8 @@ Command Parser::parse(const std::string &line) const
 
 	stream >> word;
 
-	// An optional source prefix may lead the line. A server ignores what a
-	// client claims here, but it still has to be consumed to find the command.
+	
+	
 	if (!word.empty() && word[0] == ':')
 	{
 		command.prefix = word.substr(1);
@@ -48,14 +48,14 @@ Command Parser::parse(const std::string &line) const
 		stream >> word;
 	}
 
-	// IRC command names are case-insensitive: "nick" and "NICK" are the same.
-	command.cmd = toUpper(word);
+	
+	command.cmd = toupper(word);
 
 	while (stream >> word)
 	{
 		if (!word.empty() && word[0] == ':')
 		{
-			// Trailing parameter: everything to end of line, spaces preserved.
+			
 			std::string	rest;
 
 			word.erase(0, 1);

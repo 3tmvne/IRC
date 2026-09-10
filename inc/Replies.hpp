@@ -1,10 +1,6 @@
 #ifndef REPLIES_HPP
 #define REPLIES_HPP
 
-// RFC 1459 / 2812 numeric reply codes.
-// Kept as named constants so handlers read as intent rather than magic numbers,
-// while still slotting straight into Server::sendNumeric(fd, code, args).
-
 #define RPL_WELCOME				"001"
 #define RPL_YOURHOST			"002"
 #define RPL_CREATED				"003"

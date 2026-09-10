@@ -9,16 +9,16 @@
 class Channel
 {
 	private:
-		std::string			_name;
-		std::string			_topic;
-		std::string			_key;
-		std::vector<int>	_members;
-		std::vector<int>	_operators;
-		std::vector<int>	_invited;
-		bool				_inviteOnly;
-		bool				_topicLocked;
-		bool				_hasKey;
-		size_t				_limit;
+		std::string			name;
+		std::string			topic;
+		std::string			key;
+		std::vector<int>	members;
+		std::vector<int>	operators;
+		std::vector<int>	invited;
+		bool				inviteOnly;
+		bool				topicLocked;
+		bool				hasKey;
+		size_t				limit;
 
 	public:
 		Channel();
@@ -27,36 +27,36 @@ class Channel
 		Channel &operator=(const Channel &other);
 		~Channel();
 
-		const std::string		&getName() const;
-		const std::string		&getTopic() const;
-		const std::string		&getKey() const;
-		const std::vector<int>	&getMembers() const;
-		size_t					getLimit() const;
-		bool					isInviteOnly() const;
-		bool					isTopicLocked() const;
-		bool					hasKey() const;
+		const std::string		&getname() const;
+		const std::string		&gettopic() const;
+		const std::string		&getkey() const;
+		const std::vector<int>	&getmembers() const;
+		size_t					getlimit() const;
+		bool					isinviteonly() const;
+		bool					istopiclocked() const;
+		bool					haskey() const;
 
-		void	setTopic(const std::string &topic);
-		void	setKey(const std::string &key);
-		void	unsetKey();
-		void	setInviteOnly(bool value);
-		void	setTopicLocked(bool value);
-		void	setLimit(size_t limit);
+		void	settopic(const std::string &topic);
+		void	setkey(const std::string &key);
+		void	unsetkey();
+		void	setinviteonly(bool value);
+		void	settopiclocked(bool value);
+		void	setlimit(size_t limit);
 
-		bool	isMember(int fd) const;
-		bool	isOperator(int fd) const;
-		bool	isInvited(int fd) const;
-		bool	isFull() const;
-		bool	isEmpty() const;
+		bool	ismember(int fd) const;
+		bool	isoperator(int fd) const;
+		bool	isinvited(int fd) const;
+		bool	isfull() const;
+		bool	isempty() const;
 
-		void	addMember(int fd);
-		void	removeMember(int fd);
-		void	addOperator(int fd);
-		void	removeOperator(int fd);
-		void	addInvite(int fd);
-		void	removeInvite(int fd);
+		void	addmember(int fd);
+		void	removemember(int fd);
+		void	addoperator(int fd);
+		void	removeoperator(int fd);
+		void	addinvite(int fd);
+		void	removeinvite(int fd);
 
-		std::string	getModeString() const;
+		std::string	getmodestring() const;
 		void		broadcast(std::map<int, Client> &clients, const std::string &message, int except) const;
 };
 

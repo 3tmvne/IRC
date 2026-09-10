@@ -1,14 +1,14 @@
 #include "Client.hpp"
 
 Client::Client()
-	: _fd(-1), _nickname(""), _username(""), _realname(""), _hostname("localhost"),
-	  _inBuf(""), _outBuf(""), _passOk(false), _registered(false), _quitting(false)
+	: fd(-1), nickname(""), username(""), realname(""), hostname("localhost"),
+	  inbuf(""), outbuf(""), passok(false), registered(false), quitting(false)
 {
 }
 
 Client::Client(int fd)
-	: _fd(fd), _nickname(""), _username(""), _realname(""), _hostname("localhost"),
-	  _inBuf(""), _outBuf(""), _passOk(false), _registered(false), _quitting(false)
+	: fd(fd), nickname(""), username(""), realname(""), hostname("localhost"),
+	  inbuf(""), outbuf(""), passok(false), registered(false), quitting(false)
 {
 }
 
@@ -21,16 +21,16 @@ Client &Client::operator=(const Client &other)
 {
 	if (this != &other)
 	{
-		_fd = other._fd;
-		_nickname = other._nickname;
-		_username = other._username;
-		_realname = other._realname;
-		_hostname = other._hostname;
-		_inBuf = other._inBuf;
-		_outBuf = other._outBuf;
-		_passOk = other._passOk;
-		_registered = other._registered;
-		_quitting = other._quitting;
+		fd = other.fd;
+		nickname = other.nickname;
+		username = other.username;
+		realname = other.realname;
+		hostname = other.hostname;
+		inbuf = other.inbuf;
+		outbuf = other.outbuf;
+		passok = other.passok;
+		registered = other.registered;
+		quitting = other.quitting;
 	}
 	return (*this);
 }
@@ -39,130 +39,127 @@ Client::~Client()
 {
 }
 
-int Client::getFd() const
+int Client::getfd() const
 {
-	return (_fd);
+	return (fd);
 }
 
-const std::string &Client::getNickname() const
+const std::string &Client::getnickname() const
 {
-	return (_nickname);
+	return (nickname);
 }
 
-void Client::setNickname(const std::string &nickname)
+void Client::setnickname(const std::string &nickname)
 {
-	_nickname = nickname;
+	this->nickname = nickname;
 }
 
-const std::string &Client::getUsername() const
+const std::string &Client::getusername() const
 {
-	return (_username);
+	return (username);
 }
 
-void Client::setUsername(const std::string &username)
+void Client::setusername(const std::string &username)
 {
-	_username = username;
+	this->username = username;
 }
 
-const std::string &Client::getRealname() const
+const std::string &Client::getrealname() const
 {
-	return (_realname);
+	return (realname);
 }
 
-void Client::setRealname(const std::string &realname)
+void Client::setrealname(const std::string &realname)
 {
-	_realname = realname;
+	this->realname = realname;
 }
 
-const std::string &Client::getHostname() const
+const std::string &Client::gethostname() const
 {
-	return (_hostname);
+	return (hostname);
 }
 
-void Client::setHostname(const std::string &hostname)
+void Client::sethostname(const std::string &hostname)
 {
-	_hostname = hostname;
+	this->hostname = hostname;
 }
 
-void Client::appendIn(const std::string &data)
+void Client::appendin(const std::string &data)
 {
-	// Phase 1: enforce the 512-byte RFC line limit here so a peer that never
-	// sends a newline cannot grow this buffer without bound.
-	_inBuf += data;
+	
+	
+	inbuf += data;
 }
 
-// Pops one complete line off the input buffer, stripping CR and LF.
-// Returns false when no full line has arrived yet -- partial commands simply
-// stay buffered until the rest of the bytes show up.
-bool Client::extractLine(std::string &line)
+bool Client::extractline(std::string &line)
 {
-	size_t	position = _inBuf.find('\n');
+	size_t	position = inbuf.find('\n');
 
 	if (position == std::string::npos)
 		return (false);
-	line = _inBuf.substr(0, position);
-	_inBuf.erase(0, position + 1);
+	line = inbuf.substr(0, position);
+	inbuf.erase(0, position + 1);
 	if (!line.empty() && line[line.size() - 1] == '\r')
 		line.erase(line.size() - 1);
 	return (true);
 }
 
-size_t Client::inSize() const
+size_t Client::insize() const
 {
-	return (_inBuf.size());
+	return (inbuf.size());
 }
 
-void Client::appendOut(const std::string &data)
+void Client::appendout(const std::string &data)
 {
-	_outBuf += data;
+	outbuf += data;
 }
 
-const std::string &Client::getOut() const
+const std::string &Client::getout() const
 {
-	return (_outBuf);
+	return (outbuf);
 }
 
-void Client::consumeOut(size_t n)
+void Client::consumeout(size_t n)
 {
-	_outBuf.erase(0, n);
+	outbuf.erase(0, n);
 }
 
-bool Client::hasOut() const
+bool Client::hasout() const
 {
-	return (!_outBuf.empty());
+	return (!outbuf.empty());
 }
 
-bool Client::hasPass() const
+bool Client::haspass() const
 {
-	return (_passOk);
+	return (passok);
 }
 
-void Client::setPass(bool value)
+void Client::setpass(bool value)
 {
-	_passOk = value;
+	this->passok = value;
 }
 
-bool Client::isRegistered() const
+bool Client::isregistered() const
 {
-	return (_registered);
+	return (registered);
 }
 
-void Client::setRegistered(bool value)
+void Client::setregistered(bool value)
 {
-	_registered = value;
+	this->registered = value;
 }
 
-bool Client::isQuitting() const
+bool Client::isquitting() const
 {
-	return (_quitting);
+	return (quitting);
 }
 
-void Client::setQuitting(bool value)
+void Client::setquitting(bool value)
 {
-	_quitting = value;
+	this->quitting = value;
 }
 
 std::string Client::prefix() const
 {
-	return (":" + _nickname + "!" + _username + "@" + _hostname);
+	return (":" + nickname + "!" + username + "@" + hostname);
 }

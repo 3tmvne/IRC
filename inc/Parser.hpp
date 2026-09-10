@@ -5,9 +5,6 @@
 #include <vector>
 #include <sstream>
 
-// One parsed IRC line:  [":" prefix SPACE] command *( SPACE param ) [SPACE ":" trailing]
-// The trailing parameter is merged into args.back(), so handlers never have to
-// care whether the last argument was written with a colon or not.
 struct Command
 {
 	std::string					prefix;
@@ -26,7 +23,7 @@ class Parser
 		Command	parse(const std::string &line) const;
 
 	private:
-		static std::string	toUpper(const std::string &str);
+		static std::string	toupper(const std::string &str);
 };
 
 #endif

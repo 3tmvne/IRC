@@ -3,8 +3,7 @@
 #include <cstdlib>
 #include <sstream>
 
-// Shared by JOIN/PART/PRIVMSG: "#a,#b" and "key1,key2" are paired by index.
-std::vector<std::string> Server::splitList(const std::string &str, char sep)
+std::vector<std::string> Server::splitlist(const std::string &str, char sep)
 {
 	std::vector<std::string>	result;
 	std::stringstream			ss(str);
@@ -15,76 +14,72 @@ std::vector<std::string> Server::splitList(const std::string &str, char sep)
 	return (result);
 }
 
-std::string Server::userPrefix(int fd)
+std::string Server::userprefix(int fd)
 {
-	return (_clients[fd].prefix());
+	return (clients[fd].prefix());
 }
 
-void Server::sendNumeric(int fd, const std::string &code, const std::string &args)
+void Server::sendnumeric(int fd, const std::string &code, const std::string &args)
 {
-	std::string	nick = _clients[fd].getNickname();
+	std::string	nick = clients[fd].getnickname();
 
-	// Numerics are addressed to a nick. Before registration the RFC
-	// placeholder "*" stands in; without it clients mis-parse the reply.
+	
+	
 	if (nick.empty())
 		nick = "*";
-	_clients[fd].appendOut(":" + _serverName + " " + code + " " + nick + " " + args + "\r\n");
+	clients[fd].appendout(":" + serverName + " " + code + " " + nick + " " + args + "\r\n");
 }
 
-int Server::getFdByNick(const std::string &nick)
+int Server::getfdbynick(const std::string &nick)
 {
 	std::map<int, Client>::iterator	it;
 
-	for (it = _clients.begin(); it != _clients.end(); ++it)
+	for (it = clients.begin(); it != clients.end(); ++it)
 	{
-		if (it->second.getNickname() == nick)
+		if (it->second.getnickname() == nick)
 			return (it->first);
 	}
 	return (-1);
 }
 
-std::string Server::buildNamesList(Channel &channel)
+std::string Server::buildnameslist(Channel &channel)
 {
 	std::string					list = "";
-	const std::vector<int>		&members = channel.getMembers();
+	const std::vector<int>		&members = channel.getmembers();
 
 	for (size_t i = 0; i < members.size(); i++)
 	{
 		if (i > 0)
 			list += " ";
-		if (channel.isOperator(members[i]))
+		if (channel.isoperator(members[i]))
 			list += "@";
-		list += _clients[members[i]].getNickname();
+		list += clients[members[i]].getnickname();
 	}
 	return (list);
 }
 
-void Server::removeFromChannel(int fd, const std::string &name)
+void Server::removefromchannel(int fd, const std::string &name)
 {
-	std::map<std::string, Channel>::iterator	it = _channels.find(name);
+	std::map<std::string, Channel>::iterator	it = channels.find(name);
 
-	if (it == _channels.end())
+	if (it == channels.end())
 		return ;
-	it->second.removeMember(fd);
-	if (it->second.isEmpty())
-		_channels.erase(it);
+	it->second.removemember(fd);
+	if (it->second.isempty())
+		channels.erase(it);
 }
 
-// Writes one line to every client sharing at least one channel with fd.
-// Recipients are collected before anything is sent, so a peer met in several
-// channels is still written to exactly once -- NICK and QUIT are announced
-// per-user, not per-channel, and clients would otherwise show them twice.
-void Server::broadcastToPeers(int fd, const std::string &message, bool includeSelf)
+void Server::broadcasttopeers(int fd, const std::string &message, bool includeSelf)
 {
 	std::vector<int>							targets;
 	std::map<std::string, Channel>::iterator	it;
 
-	for (it = _channels.begin(); it != _channels.end(); ++it)
+	for (it = channels.begin(); it != channels.end(); ++it)
 	{
-		if (!it->second.isMember(fd))
+		if (!it->second.ismember(fd))
 			continue ;
 
-		const std::vector<int>	&members = it->second.getMembers();
+		const std::vector<int>	&members = it->second.getmembers();
 
 		for (size_t i = 0; i < members.size(); i++)
 		{
@@ -98,26 +93,26 @@ void Server::broadcastToPeers(int fd, const std::string &message, bool includeSe
 
 	for (size_t i = 0; i < targets.size(); i++)
 	{
-		std::map<int, Client>::iterator	client = _clients.find(targets[i]);
+		std::map<int, Client>::iterator	client = clients.find(targets[i]);
 
-		if (client != _clients.end())
-			client->second.appendOut(message + "\r\n");
+		if (client != clients.end())
+			client->second.appendout(message + "\r\n");
 	}
 }
 
-void Server::handleJoinCommand(int fd, const std::vector<std::string> &params)
+void Server::handlejoincommand(int fd, const std::vector<std::string> &params)
 {
 	if (params.empty())
 	{
-		sendNumeric(fd, ERR_NEEDMOREPARAMS, "JOIN :Not enough parameters");
+		sendnumeric(fd, ERR_NEEDMOREPARAMS, "JOIN :Not enough parameters");
 		return ;
 	}
 
-	std::vector<std::string>	names = splitList(params[0], ',');
+	std::vector<std::string>	names = splitlist(params[0], ',');
 	std::vector<std::string>	keys;
 
 	if (params.size() > 1)
-		keys = splitList(params[1], ',');
+		keys = splitlist(params[1], ',');
 
 	for (size_t i = 0; i < names.size(); i++)
 	{
@@ -129,223 +124,223 @@ void Server::handleJoinCommand(int fd, const std::vector<std::string> &params)
 
 		if (name.empty() || (name[0] != '#' && name[0] != '&'))
 		{
-			sendNumeric(fd, ERR_BADCHANMASK, name + " :Bad Channel Mask");
+			sendnumeric(fd, ERR_BADCHANMASK, name + " :Bad Channel Mask");
 			continue ;
 		}
 
-		if (_channels.find(name) == _channels.end())
+		if (channels.find(name) == channels.end())
 		{
-			_channels[name] = Channel(name);
-			_channels[name].addMember(fd);
-			_channels[name].addOperator(fd);
+			channels[name] = Channel(name);
+			channels[name].addmember(fd);
+			channels[name].addoperator(fd);
 		}
 		else
 		{
-			Channel	&target = _channels[name];
+			Channel	&target = channels[name];
 
-			if (target.isMember(fd))
+			if (target.ismember(fd))
 				continue ;
-			if (target.isInviteOnly() && !target.isInvited(fd))
+			if (target.isinviteonly() && !target.isinvited(fd))
 			{
-				sendNumeric(fd, ERR_INVITEONLYCHAN, name + " :Cannot join channel (+i)");
+				sendnumeric(fd, ERR_INVITEONLYCHAN, name + " :Cannot join channel (+i)");
 				continue ;
 			}
-			if (target.hasKey() && target.getKey() != key)
+			if (target.haskey() && target.getkey() != key)
 			{
-				sendNumeric(fd, ERR_BADCHANNELKEY, name + " :Cannot join channel (+k)");
+				sendnumeric(fd, ERR_BADCHANNELKEY, name + " :Cannot join channel (+k)");
 				continue ;
 			}
-			if (target.isFull())
+			if (target.isfull())
 			{
-				sendNumeric(fd, ERR_CHANNELISFULL, name + " :Cannot join channel (+l)");
+				sendnumeric(fd, ERR_CHANNELISFULL, name + " :Cannot join channel (+l)");
 				continue ;
 			}
-			target.addMember(fd);
-			target.removeInvite(fd);
+			target.addmember(fd);
+			target.removeinvite(fd);
 		}
 
-		Channel	&channel = _channels[name];
+		Channel	&channel = channels[name];
 
-		channel.broadcast(_clients, userPrefix(fd) + " JOIN " + name, -1);
-		if (channel.getTopic().empty())
-			sendNumeric(fd, RPL_NOTOPIC, name + " :No topic is set");
+		channel.broadcast(clients, userprefix(fd) + " JOIN " + name, -1);
+		if (channel.gettopic().empty())
+			sendnumeric(fd, RPL_NOTOPIC, name + " :No topic is set");
 		else
-			sendNumeric(fd, RPL_TOPIC, name + " :" + channel.getTopic());
-		sendNumeric(fd, RPL_NAMREPLY, "= " + name + " :" + buildNamesList(channel));
-		sendNumeric(fd, RPL_ENDOFNAMES, name + " :End of /NAMES list");
+			sendnumeric(fd, RPL_TOPIC, name + " :" + channel.gettopic());
+		sendnumeric(fd, RPL_NAMREPLY, "= " + name + " :" + buildnameslist(channel));
+		sendnumeric(fd, RPL_ENDOFNAMES, name + " :End of /NAMES list");
 	}
 }
 
-void Server::handleInvitCommand(int fd, const std::vector<std::string> &params)
+void Server::handleinvitecommand(int fd, const std::vector<std::string> &params)
 {
 	if (params.size() < 2)
 	{
-		sendNumeric(fd, ERR_NEEDMOREPARAMS, "INVITE :Not enough parameters");
+		sendnumeric(fd, ERR_NEEDMOREPARAMS, "INVITE :Not enough parameters");
 		return ;
 	}
 
 	std::string	nick = params[0];
 	std::string	name = params[1];
 
-	if (_channels.find(name) == _channels.end())
+	if (channels.find(name) == channels.end())
 	{
-		sendNumeric(fd, ERR_NOSUCHCHANNEL, name + " :No such channel");
+		sendnumeric(fd, ERR_NOSUCHCHANNEL, name + " :No such channel");
 		return ;
 	}
 
-	Channel	&channel = _channels[name];
+	Channel	&channel = channels[name];
 
-	if (!channel.isMember(fd))
+	if (!channel.ismember(fd))
 	{
-		sendNumeric(fd, ERR_NOTONCHANNEL, name + " :You're not on that channel");
+		sendnumeric(fd, ERR_NOTONCHANNEL, name + " :You're not on that channel");
 		return ;
 	}
-	if (!channel.isOperator(fd))
+	if (!channel.isoperator(fd))
 	{
-		sendNumeric(fd, ERR_CHANOPRIVSNEEDED, name + " :You're not channel operator");
+		sendnumeric(fd, ERR_CHANOPRIVSNEEDED, name + " :You're not channel operator");
 		return ;
 	}
 
-	int	targetFd = getFdByNick(nick);
+	int	targetFd = getfdbynick(nick);
 
 	if (targetFd == -1)
 	{
-		sendNumeric(fd, ERR_NOSUCHNICK, nick + " :No such nick/channel");
+		sendnumeric(fd, ERR_NOSUCHNICK, nick + " :No such nick/channel");
 		return ;
 	}
-	if (channel.isMember(targetFd))
+	if (channel.ismember(targetFd))
 	{
-		sendNumeric(fd, ERR_USERONCHANNEL, nick + " " + name + " :is already on channel");
+		sendnumeric(fd, ERR_USERONCHANNEL, nick + " " + name + " :is already on channel");
 		return ;
 	}
 
-	channel.addInvite(targetFd);
-	sendNumeric(fd, RPL_INVITING, nick + " " + name);
-	_clients[targetFd].appendOut(userPrefix(fd) + " INVITE " + nick + " :" + name + "\r\n");
+	channel.addinvite(targetFd);
+	sendnumeric(fd, RPL_INVITING, nick + " " + name);
+	clients[targetFd].appendout(userprefix(fd) + " INVITE " + nick + " :" + name + "\r\n");
 }
 
-void Server::handleKickCommand(int fd, const std::vector<std::string> &params)
+void Server::handlekickcommand(int fd, const std::vector<std::string> &params)
 {
 	if (params.size() < 2)
 	{
-		sendNumeric(fd, ERR_NEEDMOREPARAMS, "KICK :Not enough parameters");
+		sendnumeric(fd, ERR_NEEDMOREPARAMS, "KICK :Not enough parameters");
 		return ;
 	}
 
 	std::string	name = params[0];
 	std::string	nick = params[1];
-	std::string	reason = _clients[fd].getNickname();
+	std::string	reason = clients[fd].getnickname();
 
 	if (params.size() > 2)
 		reason = params[2];
 
-	if (_channels.find(name) == _channels.end())
+	if (channels.find(name) == channels.end())
 	{
-		sendNumeric(fd, ERR_NOSUCHCHANNEL, name + " :No such channel");
+		sendnumeric(fd, ERR_NOSUCHCHANNEL, name + " :No such channel");
 		return ;
 	}
 
-	Channel	&channel = _channels[name];
+	Channel	&channel = channels[name];
 
-	if (!channel.isMember(fd))
+	if (!channel.ismember(fd))
 	{
-		sendNumeric(fd, ERR_NOTONCHANNEL, name + " :You're not on that channel");
+		sendnumeric(fd, ERR_NOTONCHANNEL, name + " :You're not on that channel");
 		return ;
 	}
-	if (!channel.isOperator(fd))
+	if (!channel.isoperator(fd))
 	{
-		sendNumeric(fd, ERR_CHANOPRIVSNEEDED, name + " :You're not channel operator");
-		return ;
-	}
-
-	int	targetFd = getFdByNick(nick);
-
-	if (targetFd == -1 || !channel.isMember(targetFd))
-	{
-		sendNumeric(fd, ERR_USERNOTINCHANNEL, nick + " " + name + " :They aren't on that channel");
+		sendnumeric(fd, ERR_CHANOPRIVSNEEDED, name + " :You're not channel operator");
 		return ;
 	}
 
-	channel.broadcast(_clients, userPrefix(fd) + " KICK " + name + " " + nick + " :" + reason, -1);
-	channel.removeMember(targetFd);
-	if (channel.isEmpty())
-		_channels.erase(name);
+	int	targetFd = getfdbynick(nick);
+
+	if (targetFd == -1 || !channel.ismember(targetFd))
+	{
+		sendnumeric(fd, ERR_USERNOTINCHANNEL, nick + " " + name + " :They aren't on that channel");
+		return ;
+	}
+
+	channel.broadcast(clients, userprefix(fd) + " KICK " + name + " " + nick + " :" + reason, -1);
+	channel.removemember(targetFd);
+	if (channel.isempty())
+		channels.erase(name);
 }
 
-void Server::handleTopicCommand(int fd, const std::vector<std::string> &params)
+void Server::handletopiccommand(int fd, const std::vector<std::string> &params)
 {
 	if (params.empty())
 	{
-		sendNumeric(fd, ERR_NEEDMOREPARAMS, "TOPIC :Not enough parameters");
+		sendnumeric(fd, ERR_NEEDMOREPARAMS, "TOPIC :Not enough parameters");
 		return ;
 	}
 
 	std::string	name = params[0];
 
-	if (_channels.find(name) == _channels.end())
+	if (channels.find(name) == channels.end())
 	{
-		sendNumeric(fd, ERR_NOSUCHCHANNEL, name + " :No such channel");
+		sendnumeric(fd, ERR_NOSUCHCHANNEL, name + " :No such channel");
 		return ;
 	}
 
-	Channel	&channel = _channels[name];
+	Channel	&channel = channels[name];
 
-	if (!channel.isMember(fd))
+	if (!channel.ismember(fd))
 	{
-		sendNumeric(fd, ERR_NOTONCHANNEL, name + " :You're not on that channel");
+		sendnumeric(fd, ERR_NOTONCHANNEL, name + " :You're not on that channel");
 		return ;
 	}
 
 	if (params.size() < 2)
 	{
-		if (channel.getTopic().empty())
-			sendNumeric(fd, RPL_NOTOPIC, name + " :No topic is set");
+		if (channel.gettopic().empty())
+			sendnumeric(fd, RPL_NOTOPIC, name + " :No topic is set");
 		else
-			sendNumeric(fd, RPL_TOPIC, name + " :" + channel.getTopic());
+			sendnumeric(fd, RPL_TOPIC, name + " :" + channel.gettopic());
 		return ;
 	}
 
-	if (channel.isTopicLocked() && !channel.isOperator(fd))
+	if (channel.istopiclocked() && !channel.isoperator(fd))
 	{
-		sendNumeric(fd, ERR_CHANOPRIVSNEEDED, name + " :You're not channel operator");
+		sendnumeric(fd, ERR_CHANOPRIVSNEEDED, name + " :You're not channel operator");
 		return ;
 	}
 
-	channel.setTopic(params[1]);
-	channel.broadcast(_clients, userPrefix(fd) + " TOPIC " + name + " :" + params[1], -1);
+	channel.settopic(params[1]);
+	channel.broadcast(clients, userprefix(fd) + " TOPIC " + name + " :" + params[1], -1);
 }
 
-void Server::handleModeCommand(int fd, const std::vector<std::string> &params)
+void Server::handlemodecommand(int fd, const std::vector<std::string> &params)
 {
 	if (params.empty())
 	{
-		sendNumeric(fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
+		sendnumeric(fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
 		return ;
 	}
 
 	std::string	name = params[0];
 
-	if (_channels.find(name) == _channels.end())
+	if (channels.find(name) == channels.end())
 	{
-		sendNumeric(fd, ERR_NOSUCHCHANNEL, name + " :No such channel");
+		sendnumeric(fd, ERR_NOSUCHCHANNEL, name + " :No such channel");
 		return ;
 	}
 
-	Channel	&channel = _channels[name];
+	Channel	&channel = channels[name];
 
 	if (params.size() < 2)
 	{
-		sendNumeric(fd, RPL_CHANNELMODEIS, name + " " + channel.getModeString());
+		sendnumeric(fd, RPL_CHANNELMODEIS, name + " " + channel.getmodestring());
 		return ;
 	}
-	if (!channel.isMember(fd))
+	if (!channel.ismember(fd))
 	{
-		sendNumeric(fd, ERR_NOTONCHANNEL, name + " :You're not on that channel");
+		sendnumeric(fd, ERR_NOTONCHANNEL, name + " :You're not on that channel");
 		return ;
 	}
-	if (!channel.isOperator(fd))
+	if (!channel.isoperator(fd))
 	{
-		sendNumeric(fd, ERR_CHANOPRIVSNEEDED, name + " :You're not channel operator");
+		sendnumeric(fd, ERR_CHANOPRIVSNEEDED, name + " :You're not channel operator");
 		return ;
 	}
 
@@ -373,11 +368,11 @@ void Server::handleModeCommand(int fd, const std::vector<std::string> &params)
 
 		if (c == 'i')
 		{
-			channel.setInviteOnly(adding);
+			channel.setinviteonly(adding);
 		}
 		else if (c == 't')
 		{
-			channel.setTopicLocked(adding);
+			channel.settopiclocked(adding);
 		}
 		else if (c == 'k')
 		{
@@ -385,35 +380,35 @@ void Server::handleModeCommand(int fd, const std::vector<std::string> &params)
 			{
 				if (argIndex >= params.size())
 				{
-					sendNumeric(fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
+					sendnumeric(fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
 					continue ;
 				}
-				channel.setKey(params[argIndex]);
+				channel.setkey(params[argIndex]);
 				appliedArgs += " " + params[argIndex];
 				argIndex++;
 			}
 			else
-				channel.unsetKey();
+				channel.unsetkey();
 		}
 		else if (c == 'o')
 		{
 			if (argIndex >= params.size())
 			{
-				sendNumeric(fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
+				sendnumeric(fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
 				continue ;
 			}
-			int	targetFd = getFdByNick(params[argIndex]);
+			int	targetFd = getfdbynick(params[argIndex]);
 
-			if (targetFd == -1 || !channel.isMember(targetFd))
+			if (targetFd == -1 || !channel.ismember(targetFd))
 			{
-				sendNumeric(fd, ERR_USERNOTINCHANNEL, params[argIndex] + " " + name + " :They aren't on that channel");
+				sendnumeric(fd, ERR_USERNOTINCHANNEL, params[argIndex] + " " + name + " :They aren't on that channel");
 				argIndex++;
 				continue ;
 			}
 			if (adding)
-				channel.addOperator(targetFd);
+				channel.addoperator(targetFd);
 			else
-				channel.removeOperator(targetFd);
+				channel.removeoperator(targetFd);
 			appliedArgs += " " + params[argIndex];
 			argIndex++;
 		}
@@ -423,7 +418,7 @@ void Server::handleModeCommand(int fd, const std::vector<std::string> &params)
 			{
 				if (argIndex >= params.size())
 				{
-					sendNumeric(fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
+					sendnumeric(fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
 					continue ;
 				}
 				int	limit = std::atoi(params[argIndex].c_str());
@@ -433,16 +428,16 @@ void Server::handleModeCommand(int fd, const std::vector<std::string> &params)
 					argIndex++;
 					continue ;
 				}
-				channel.setLimit(static_cast<size_t>(limit));
+				channel.setlimit(static_cast<size_t>(limit));
 				appliedArgs += " " + params[argIndex];
 				argIndex++;
 			}
 			else
-				channel.setLimit(0);
+				channel.setlimit(0);
 		}
 		else
 		{
-			sendNumeric(fd, ERR_UNKNOWNMODE, std::string(1, c) + " :is unknown mode char to me");
+			sendnumeric(fd, ERR_UNKNOWNMODE, std::string(1, c) + " :is unknown mode char to me");
 			continue ;
 		}
 
@@ -457,5 +452,5 @@ void Server::handleModeCommand(int fd, const std::vector<std::string> &params)
 	}
 
 	if (!appliedModes.empty())
-		channel.broadcast(_clients, userPrefix(fd) + " MODE " + name + " " + appliedModes + appliedArgs, -1);
+		channel.broadcast(clients, userprefix(fd) + " MODE " + name + " " + appliedModes + appliedArgs, -1);
 }

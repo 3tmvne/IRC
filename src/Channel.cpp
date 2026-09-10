@@ -2,12 +2,12 @@
 #include <sstream>
 
 Channel::Channel()
-	: _name(""), _topic(""), _key(""), _inviteOnly(false), _topicLocked(false), _hasKey(false), _limit(0)
+	: name(""), topic(""), key(""), inviteOnly(false), topicLocked(false), hasKey(false), limit(0)
 {
 }
 
 Channel::Channel(const std::string &name)
-	: _name(name), _topic(""), _key(""), _inviteOnly(false), _topicLocked(false), _hasKey(false), _limit(0)
+	: name(name), topic(""), key(""), inviteOnly(false), topicLocked(false), hasKey(false), limit(0)
 {
 }
 
@@ -20,16 +20,16 @@ Channel &Channel::operator=(const Channel &other)
 {
 	if (this != &other)
 	{
-		_name = other._name;
-		_topic = other._topic;
-		_key = other._key;
-		_members = other._members;
-		_operators = other._operators;
-		_invited = other._invited;
-		_inviteOnly = other._inviteOnly;
-		_topicLocked = other._topicLocked;
-		_hasKey = other._hasKey;
-		_limit = other._limit;
+		name = other.name;
+		topic = other.topic;
+		key = other.key;
+		members = other.members;
+		operators = other.operators;
+		invited = other.invited;
+		inviteOnly = other.inviteOnly;
+		topicLocked = other.topicLocked;
+		hasKey = other.hasKey;
+		limit = other.limit;
 	}
 	return (*this);
 }
@@ -38,194 +38,194 @@ Channel::~Channel()
 {
 }
 
-const std::string &Channel::getName() const
+const std::string &Channel::getname() const
 {
-	return (_name);
+	return (name);
 }
 
-const std::string &Channel::getTopic() const
+const std::string &Channel::gettopic() const
 {
-	return (_topic);
+	return (topic);
 }
 
-const std::string &Channel::getKey() const
+const std::string &Channel::getkey() const
 {
-	return (_key);
+	return (key);
 }
 
-const std::vector<int> &Channel::getMembers() const
+const std::vector<int> &Channel::getmembers() const
 {
-	return (_members);
+	return (members);
 }
 
-size_t Channel::getLimit() const
+size_t Channel::getlimit() const
 {
-	return (_limit);
+	return (limit);
 }
 
-bool Channel::isInviteOnly() const
+bool Channel::isinviteonly() const
 {
-	return (_inviteOnly);
+	return (inviteOnly);
 }
 
-bool Channel::isTopicLocked() const
+bool Channel::istopiclocked() const
 {
-	return (_topicLocked);
+	return (topicLocked);
 }
 
-bool Channel::hasKey() const
+bool Channel::haskey() const
 {
-	return (_hasKey);
+	return (hasKey);
 }
 
-void Channel::setTopic(const std::string &topic)
+void Channel::settopic(const std::string &topic)
 {
-	_topic = topic;
+	this->topic = topic;
 }
 
-void Channel::setKey(const std::string &key)
+void Channel::setkey(const std::string &key)
 {
-	_key = key;
-	_hasKey = true;
+	this->key = key;
+	this->hasKey = true;
 }
 
-void Channel::unsetKey()
+void Channel::unsetkey()
 {
-	_key = "";
-	_hasKey = false;
+	this->key = "";
+	this->hasKey = false;
 }
 
-void Channel::setInviteOnly(bool value)
+void Channel::setinviteonly(bool value)
 {
-	_inviteOnly = value;
+	this->inviteOnly = value;
 }
 
-void Channel::setTopicLocked(bool value)
+void Channel::settopiclocked(bool value)
 {
-	_topicLocked = value;
+	this->topicLocked = value;
 }
 
-void Channel::setLimit(size_t limit)
+void Channel::setlimit(size_t limit)
 {
-	_limit = limit;
+	this->limit = limit;
 }
 
-bool Channel::isMember(int fd) const
+bool Channel::ismember(int fd) const
 {
-	for (size_t i = 0; i < _members.size(); i++)
+	for (size_t i = 0; i < members.size(); i++)
 	{
-		if (_members[i] == fd)
+		if (members[i] == fd)
 			return (true);
 	}
 	return (false);
 }
 
-bool Channel::isOperator(int fd) const
+bool Channel::isoperator(int fd) const
 {
-	for (size_t i = 0; i < _operators.size(); i++)
+	for (size_t i = 0; i < operators.size(); i++)
 	{
-		if (_operators[i] == fd)
+		if (operators[i] == fd)
 			return (true);
 	}
 	return (false);
 }
 
-bool Channel::isInvited(int fd) const
+bool Channel::isinvited(int fd) const
 {
-	for (size_t i = 0; i < _invited.size(); i++)
+	for (size_t i = 0; i < invited.size(); i++)
 	{
-		if (_invited[i] == fd)
+		if (invited[i] == fd)
 			return (true);
 	}
 	return (false);
 }
 
-bool Channel::isFull() const
+bool Channel::isfull() const
 {
-	if (_limit == 0)
+	if (limit == 0)
 		return (false);
-	return (_members.size() >= _limit);
+	return (members.size() >= limit);
 }
 
-bool Channel::isEmpty() const
+bool Channel::isempty() const
 {
-	return (_members.empty());
+	return (members.empty());
 }
 
-void Channel::addMember(int fd)
+void Channel::addmember(int fd)
 {
-	if (!isMember(fd))
-		_members.push_back(fd);
+	if (!ismember(fd))
+		members.push_back(fd);
 }
 
-void Channel::removeMember(int fd)
+void Channel::removemember(int fd)
 {
-	for (size_t i = 0; i < _members.size(); i++)
+	for (size_t i = 0; i < members.size(); i++)
 	{
-		if (_members[i] == fd)
+		if (members[i] == fd)
 		{
-			_members.erase(_members.begin() + i);
+			members.erase(members.begin() + i);
 			break ;
 		}
 	}
-	removeOperator(fd);
-	removeInvite(fd);
+	removeoperator(fd);
+	removeinvite(fd);
 }
 
-void Channel::addOperator(int fd)
+void Channel::addoperator(int fd)
 {
-	if (!isOperator(fd))
-		_operators.push_back(fd);
+	if (!isoperator(fd))
+		operators.push_back(fd);
 }
 
-void Channel::removeOperator(int fd)
+void Channel::removeoperator(int fd)
 {
-	for (size_t i = 0; i < _operators.size(); i++)
+	for (size_t i = 0; i < operators.size(); i++)
 	{
-		if (_operators[i] == fd)
+		if (operators[i] == fd)
 		{
-			_operators.erase(_operators.begin() + i);
+			operators.erase(operators.begin() + i);
 			return ;
 		}
 	}
 }
 
-void Channel::addInvite(int fd)
+void Channel::addinvite(int fd)
 {
-	if (!isInvited(fd))
-		_invited.push_back(fd);
+	if (!isinvited(fd))
+		invited.push_back(fd);
 }
 
-void Channel::removeInvite(int fd)
+void Channel::removeinvite(int fd)
 {
-	for (size_t i = 0; i < _invited.size(); i++)
+	for (size_t i = 0; i < invited.size(); i++)
 	{
-		if (_invited[i] == fd)
+		if (invited[i] == fd)
 		{
-			_invited.erase(_invited.begin() + i);
+			invited.erase(invited.begin() + i);
 			return ;
 		}
 	}
 }
 
-std::string Channel::getModeString() const
+std::string Channel::getmodestring() const
 {
 	std::string	modes = "+";
 	std::string	args = "";
 
-	if (_inviteOnly)
+	if (inviteOnly)
 		modes += "i";
-	if (_topicLocked)
+	if (topicLocked)
 		modes += "t";
-	if (_hasKey)
+	if (hasKey)
 	{
 		modes += "k";
-		args += " " + _key;
+		args += " " + key;
 	}
-	if (_limit > 0)
+	if (limit > 0)
 	{
 		std::stringstream	ss;
-		ss << _limit;
+		ss << limit;
 		modes += "l";
 		args += " " + ss.str();
 	}
@@ -234,12 +234,12 @@ std::string Channel::getModeString() const
 
 void Channel::broadcast(std::map<int, Client> &clients, const std::string &message, int except) const
 {
-	for (size_t i = 0; i < _members.size(); i++)
+	for (size_t i = 0; i < members.size(); i++)
 	{
-		if (_members[i] == except)
+		if (members[i] == except)
 			continue ;
-		std::map<int, Client>::iterator it = clients.find(_members[i]);
+		std::map<int, Client>::iterator it = clients.find(members[i]);
 		if (it != clients.end())
-			it->second.appendOut(message + "\r\n");
+			it->second.appendout(message + "\r\n");
 	}
 }

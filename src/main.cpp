@@ -3,15 +3,13 @@
 
 volatile sig_atomic_t	g_stop = 0;
 
-static void	handleSignal(int signum)
+static void	handlesignal(int signum)
 {
 	(void)signum;
 	g_stop = 1;
 }
 
-// The port must be a plain decimal number in the unprivileged range; anything
-// else is rejected up front rather than failing obscurely inside bind().
-static bool	parsePort(const std::string &arg, int &port)
+static bool	parseport(const std::string &arg, int &port)
 {
 	if (arg.empty() || arg.size() > 5)
 		return (false);
@@ -33,7 +31,7 @@ int	main(int argc, char **argv)
 	}
 
 	int	port = 0;
-	if (!parsePort(argv[1], port))
+	if (!parseport(argv[1], port))
 	{
 		std::cerr << "error: port must be a number between 1024 and 65535" << std::endl;
 		return (1);
@@ -46,12 +44,12 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 
-	// Writing to a socket whose peer has vanished raises SIGPIPE, whose default
-	// action kills the process. Ignoring it turns that into a send() error the
-	// event loop already knows how to handle.
+	
+	
+	
 	std::signal(SIGPIPE, SIG_IGN);
-	std::signal(SIGINT, handleSignal);
-	std::signal(SIGTERM, handleSignal);
+	std::signal(SIGINT, handlesignal);
+	std::signal(SIGTERM, handlesignal);
 
 	try
 	{
