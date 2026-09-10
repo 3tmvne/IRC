@@ -168,7 +168,7 @@ void Server::completeregistration(int fd)
 	sendnumeric(fd, RPL_ISUPPORT, "CHANTYPES=#& CHANMODES=,k,l,it PREFIX=(o)@ NICKLEN=9"
 		" :are supported by this server");
 	sendnumeric(fd, RPL_MOTDSTART, ":- " + serverName + " Message of the Day -");
-	sendnumeric(fd, RPL_MOTD, ":- Commands: JOIN PART PRIVMSG NOTICE TOPIC MODE KICK INVITE");
+	sendnumeric(fd, RPL_MOTD, ":- Commands: JOIN PRIVMSG TOPIC MODE KICK INVITE");
 	sendnumeric(fd, RPL_MOTD, ":- Channel modes: +i +t +k +l +o");
 	sendnumeric(fd, RPL_ENDOFMOTD, ":End of /MOTD command");
 

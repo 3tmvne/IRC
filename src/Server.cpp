@@ -67,8 +67,12 @@ void Server::run()
 					continue ;
 				}
 			}
-			if (i < pollFds.size() && (pollFds[i].revents & POLLOUT))
+			if (i < pollFds.size() && (pollFds[i].revents & POLLOUT)){
+				size_t	oldSize = pollFds.size();
 				senddata(i);
+				if (pollFds.size() < oldSize)
+					--i;
+			}
 		}
 	}
 	std::cout << "shutting down" << std::endl;
@@ -111,7 +115,7 @@ void Server::processinput(int fd)
 	std::string						line;
 	if (it == clients.end())
 		return ;
-	while (it->second.extractline(line)){
+	while (!it->second.isquitting() && it->second.extractline(line)){
 		if (!line.empty())
 			executecommand(fd, parser.parse(line));
 		it = clients.find(fd);
@@ -126,7 +130,7 @@ void Server::executecommand(int fd, const Command &cmd)
 	if (name.empty())
 		return ;
 	if (!clients[fd].isregistered() && name != "PASS" && name != "NICK"
-		&& name != "USER" && name != "QUIT" && name != "PING"){
+		&& name != "USER" && name != "PING"){
 		sendnumeric(fd, ERR_NOTREGISTERED, ":You have not registered");
 		return ;
 	}
@@ -166,11 +170,23 @@ void Server::senddata(size_t index)
 		return ;
 	}
 	client.consumeout(static_cast<size_t>(bytes));
+	if (!client.hasout() && client.isquitting())
+		closeclient(index);
 }
 
 void Server::closeclient(size_t index)
 {
-	int	fd = pollFds[index].fd;
+	int								fd = pollFds[index].fd;
+	std::vector<std::string>		names;
+	std::map<std::string, Channel>::iterator	it;
+
+	for (it = channels.begin(); it != channels.end(); ++it)
+	{
+		if (it->second.ismember(fd))
+			names.push_back(it->first);
+	}
+	for (size_t i = 0; i < names.size(); i++)
+		removefromchannel(fd, names[i]);
 	close(fd);
 	clients.erase(fd);
 	pollFds.erase(pollFds.begin() + static_cast<long>(index));

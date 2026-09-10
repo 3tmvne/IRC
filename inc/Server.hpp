@@ -77,12 +77,9 @@ class Server
 
 		
 		void	handlepingcommand(int fd, const std::vector<std::string> &params);
-		void	handlequitcommand(int fd, const std::vector<std::string> &params);
 		void	handleprivmsgcommand(int fd, const std::vector<std::string> &params);
-		void	handlenoticecommand(int fd, const std::vector<std::string> &params);
-		void	handlepartcommand(int fd, const std::vector<std::string> &params);
 		void	delivermessage(int fd, const std::vector<std::string> &params,
-				const std::string &verb, bool quiet);
+				const std::string &verb);
 
 		
 		void	handlejoincommand(int fd, const std::vector<std::string> &params);
