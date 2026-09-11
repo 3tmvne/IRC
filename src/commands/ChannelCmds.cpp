@@ -22,9 +22,6 @@ std::string Server::userprefix(int fd)
 void Server::sendnumeric(int fd, const std::string &code, const std::string &args)
 {
 	std::string	nick = clients[fd].getnickname();
-
-	
-	
 	if (nick.empty())
 		nick = "*";
 	clients[fd].appendout(":" + serverName + " " + code + " " + nick + " " + args + "\r\n");

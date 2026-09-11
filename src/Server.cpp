@@ -26,8 +26,8 @@ void Server::initsocket()
 	sockaddr_in	address;
 	std::memset(&address, 0, sizeof(address));
 	address.sin_family = AF_INET;
-	address.sin_port = htons(static_cast<uint16_t>(port));
-	address.sin_addr.s_addr = htonl(INADDR_ANY);
+	address.sin_port = htons(port);
+	address.sin_addr.s_addr = INADDR_ANY;
 	if (bind(listenFd, reinterpret_cast<sockaddr *>(&address), sizeof(address)) == -1)
 		throw std::runtime_error("bind() failed");
 	if (listen(listenFd, SOMAXCONN) == -1)
@@ -96,13 +96,13 @@ void Server::acceptclient()
 	std::cout << "client connected: fd " << clientFd << std::endl;
 }
 
-void Server::receivedata(size_t index)
+void Server::receivedata(size_t i)
 {
-	int		fd = pollFds[index].fd;
+	int		fd = pollFds[i].fd;
 	char	buffer[512];
 	ssize_t	bytes = recv(fd, buffer, sizeof(buffer), 0);
 	if (bytes <= 0){
-		closeclient(index);
+		closeclient(i);
 		return ;
 	}
 	clients[fd].appendin(std::string(buffer, static_cast<size_t>(bytes)));

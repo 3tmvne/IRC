@@ -86,8 +86,6 @@ void Client::sethostname(const std::string &hostname)
 
 void Client::appendin(const std::string &data)
 {
-	
-	
 	inbuf += data;
 }
 
